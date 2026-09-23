@@ -1,0 +1,11 @@
+**/node_modules
+**/.env
+**/.env.local
+.git
+.github
+.claude
+data
+docs
+frontend/build
+backend/test
+*.md

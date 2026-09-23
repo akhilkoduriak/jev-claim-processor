@@ -1,0 +1,758 @@
+{
+  "datasets": {
+    "quick_test": {
+      "name": "Quick Test (3 claims)",
+      "description": "Fast validation - one approve, one deny, one review",
+      "samples": [
+        {
+          "category": "Approval",
+          "description": "Emergency Room - Clear Approval",
+          "expected": "approve",
+          "claim": {
+            "claimId": "QUICK-APPR-001",
+            "patientName": "Alice Johnson",
+            "amount": 2500,
+            "diagnosis": "Emergency Room Visit",
+            "procedure": "Emergency care",
+            "procedureCode": "99285",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Denial",
+          "description": "Cosmetic Surgery - Clear Denial",
+          "expected": "deny",
+          "claim": {
+            "claimId": "QUICK-DENY-001",
+            "patientName": "Bob Wilson",
+            "amount": 5000,
+            "diagnosis": "Cosmetic procedure",
+            "procedure": "Elective cosmetic surgery",
+            "procedureCode": "15789",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Review",
+          "description": "High Cost Lab Test - Anomaly Detection",
+          "expected": "review",
+          "claim": {
+            "claimId": "QUICK-REV-001",
+            "patientName": "Carol Davis",
+            "amount": 8500,
+            "diagnosis": "Lab Test",
+            "procedure": "Lab Test",
+            "procedureCode": "80053",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "suspicious"
+          }
+        }
+      ]
+    },
+    "comprehensive": {
+      "name": "Comprehensive Test (32 claims)",
+      "description": "Full test suite covering all claim types and edge cases",
+      "samples": [
+        {
+          "category": "Emergency",
+          "description": "Emergency Room Visit",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-ER-001",
+            "patientName": "John Smith",
+            "amount": 2500,
+            "diagnosis": "Emergency Room Visit",
+            "procedure": "Emergency care",
+            "procedureCode": "99285",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Emergency",
+          "description": "Trauma - Accident",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-ER-002",
+            "patientName": "James Brown",
+            "amount": 5000,
+            "diagnosis": "Trauma - Motor vehicle accident",
+            "procedure": "Emergency care",
+            "procedureCode": "99286",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Emergency",
+          "description": "Chest Pain - Cardiac",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-ER-003",
+            "patientName": "Michael Anderson",
+            "amount": 3200,
+            "diagnosis": "Chest pain - Cardiac evaluation",
+            "procedure": "Emergency care",
+            "procedureCode": "99287",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Preventive",
+          "description": "Annual Checkup",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-PREV-001",
+            "patientName": "Jane Doe",
+            "amount": 250,
+            "diagnosis": "Annual Checkup",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 1,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Preventive",
+          "description": "Cancer Screening",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-PREV-002",
+            "patientName": "Sarah Wilson",
+            "amount": 350,
+            "diagnosis": "Cancer screening - Mammography",
+            "procedure": "Imaging",
+            "procedureCode": "76092",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Preventive",
+          "description": "Vaccination Program",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-PREV-003",
+            "patientName": "David Martinez",
+            "amount": 125,
+            "diagnosis": "Annual vaccination program",
+            "procedure": "Vaccination",
+            "procedureCode": "90658",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Chronic",
+          "description": "Diabetes Management",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-CHRON-001",
+            "patientName": "Robert Garcia",
+            "amount": 450,
+            "diagnosis": "Diabetes Type 2 - Follow-up",
+            "procedure": "Office Visit",
+            "procedureCode": "99214",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 2,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Chronic",
+          "description": "Hypertension Management",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-CHRON-002",
+            "patientName": "Linda Taylor",
+            "amount": 200,
+            "diagnosis": "Essential hypertension - Management",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 2,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Chronic",
+          "description": "Asthma Management",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-CHRON-003",
+            "patientName": "Christopher White",
+            "amount": 300,
+            "diagnosis": "Asthma - Follow-up visit",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 1,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Mental Health",
+          "description": "Therapy Session",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-MH-001",
+            "patientName": "Amanda Harris",
+            "amount": 150,
+            "diagnosis": "Major depression - Therapy",
+            "procedure": "Counseling Session",
+            "procedureCode": "90834",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 1,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Mental Health",
+          "description": "Psychiatric Evaluation",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-MH-002",
+            "patientName": "Matthew Moore",
+            "amount": 250,
+            "diagnosis": "Anxiety disorder - Psychiatric eval",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Surgery",
+          "description": "ACL Repair Surgery",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-SURG-001",
+            "patientName": "Jessica Lee",
+            "amount": 35000,
+            "diagnosis": "ACL tear - Surgical repair",
+            "procedure": "Surgery",
+            "procedureCode": "29881",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Surgery",
+          "description": "Appendectomy",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-SURG-002",
+            "patientName": "Kevin Clark",
+            "amount": 28000,
+            "diagnosis": "Acute appendicitis - Appendectomy",
+            "procedure": "Surgery",
+            "procedureCode": "44970",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Surgery",
+          "description": "Cataract Surgery",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-SURG-003",
+            "patientName": "Patricia Lewis",
+            "amount": 4500,
+            "diagnosis": "Cataract - Surgical removal",
+            "procedure": "Surgery",
+            "procedureCode": "66984",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Imaging",
+          "description": "MRI Brain",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-IMG-001",
+            "patientName": "Thomas Walker",
+            "amount": 1200,
+            "diagnosis": "Headache - Brain MRI",
+            "procedure": "Imaging - MRI",
+            "procedureCode": "70553",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Imaging",
+          "description": "CT Scan Chest",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-IMG-002",
+            "patientName": "Nancy Hall",
+            "amount": 800,
+            "diagnosis": "Chest pain - CT angiography",
+            "procedure": "Imaging - CT",
+            "procedureCode": "71275",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Imaging",
+          "description": "X-Ray Leg",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-IMG-003",
+            "patientName": "Daniel Young",
+            "amount": 150,
+            "diagnosis": "Leg injury - X-ray",
+            "procedure": "Imaging - X-Ray",
+            "procedureCode": "71046",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Lab",
+          "description": "Comprehensive Metabolic Panel",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-LAB-001",
+            "patientName": "Susan King",
+            "amount": 200,
+            "diagnosis": "Routine lab work",
+            "procedure": "Lab Test",
+            "procedureCode": "80053",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Lab",
+          "description": "Blood Glucose Test",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-LAB-002",
+            "patientName": "Paul Wright",
+            "amount": 50,
+            "diagnosis": "Diabetes - Glucose monitoring",
+            "procedure": "Lab Test",
+            "procedureCode": "82962",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 4,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Lab",
+          "description": "Lipid Panel",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-LAB-003",
+            "patientName": "Catherine Lopez",
+            "amount": 175,
+            "diagnosis": "Cardiovascular risk assessment",
+            "procedure": "Lab Test",
+            "procedureCode": "80061",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Physical Therapy",
+          "description": "PT Session - Post-Surgery",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-PT-001",
+            "patientName": "Ryan Hill",
+            "amount": 150,
+            "diagnosis": "Post-surgery rehabilitation",
+            "procedure": "Physical Therapy",
+            "procedureCode": "97110",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 5,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Physical Therapy",
+          "description": "PT Session - Back Pain",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-PT-002",
+            "patientName": "Michelle Scott",
+            "amount": 140,
+            "diagnosis": "Back pain - PT treatment",
+            "procedure": "Physical Therapy",
+            "procedureCode": "97110",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 3,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Urgent Care",
+          "description": "Urgent Care Visit",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-UC-001",
+            "patientName": "Edward Green",
+            "amount": 800,
+            "diagnosis": "Urgent care - Minor laceration",
+            "procedure": "Urgent Care",
+            "procedureCode": "99282",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Denial",
+          "description": "Cosmetic Surgery - Elective",
+          "expected": "deny",
+          "claim": {
+            "claimId": "EXP-DENY-001",
+            "patientName": "Frank Adams",
+            "amount": 5000,
+            "diagnosis": "Cosmetic procedure",
+            "procedure": "Elective cosmetic surgery",
+            "procedureCode": "15789",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Denial",
+          "description": "Experimental Treatment",
+          "expected": "deny",
+          "claim": {
+            "claimId": "EXP-DENY-002",
+            "patientName": "Helen Baker",
+            "amount": 3000,
+            "diagnosis": "Experimental cancer treatment",
+            "procedure": "Experimental Therapy",
+            "procedureCode": "99999",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Anomaly",
+          "description": "Unusually High Lab Cost",
+          "expected": "review",
+          "claim": {
+            "claimId": "EXP-ANOM-001",
+            "patientName": "George Nelson",
+            "amount": 8500,
+            "diagnosis": "Lab Test",
+            "procedure": "Lab Test",
+            "procedureCode": "80053",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "suspicious"
+          }
+        },
+        {
+          "category": "Anomaly",
+          "description": "Frequent Office Visits",
+          "expected": "review",
+          "claim": {
+            "claimId": "EXP-ANOM-002",
+            "patientName": "Iris Murphy",
+            "amount": 500,
+            "diagnosis": "Office Visit",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 10,
+            "frequencyPattern": "suspicious"
+          }
+        },
+        {
+          "category": "Anomaly",
+          "description": "Out-of-Network Emergency",
+          "expected": "review",
+          "claim": {
+            "claimId": "EXP-ANOM-003",
+            "patientName": "Jack Davis",
+            "amount": 3500,
+            "diagnosis": "Emergency Room Visit",
+            "procedure": "Emergency care",
+            "procedureCode": "99285",
+            "providerTier": "out-of-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Anomaly",
+          "description": "Out-of-Network + High Frequency",
+          "expected": "review",
+          "claim": {
+            "claimId": "EXP-ANOM-004",
+            "patientName": "Karen Thomas",
+            "amount": 200,
+            "diagnosis": "Office Visit",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "out-of-network",
+            "priorClaimsInMonth": 7,
+            "frequencyPattern": "suspicious"
+          }
+        },
+        {
+          "category": "Anomaly",
+          "description": "Very High Amount - Complex Case",
+          "expected": "review",
+          "claim": {
+            "claimId": "EXP-ANOM-005",
+            "patientName": "Laura Jackson",
+            "amount": 125000,
+            "diagnosis": "Complex multi-organ surgery",
+            "procedure": "Major Surgery",
+            "procedureCode": "27447",
+            "providerTier": "out-of-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Edge Case",
+          "description": "Very Low Amount Claim",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-EDGE-001",
+            "patientName": "Mark White",
+            "amount": 25,
+            "diagnosis": "Band-aid and supplies",
+            "procedure": "Supplies",
+            "procedureCode": "99999",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Edge Case",
+          "description": "Multiple Prior Claims - Normal",
+          "expected": "approve",
+          "claim": {
+            "claimId": "EXP-EDGE-002",
+            "patientName": "Olivia Green",
+            "amount": 150,
+            "diagnosis": "Office Visit",
+            "procedure": "Office Visit",
+            "procedureCode": "99213",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 6,
+            "frequencyPattern": "normal"
+          }
+        }
+      ]
+    },
+    "fraud_checks": {
+      "name": "Fraud and Billing Checks (11 claims)",
+      "description": "Overbilling, frequent claims, out-of-network billing and very large claims, plus legitimate claims just inside the price limits to catch false alarms.",
+      "samples": [
+        {
+          "category": "Overbilling",
+          "description": "Office visit billed at 7x the typical price",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-UPC-001",
+            "patientName": "Nina Patel",
+            "amount": 4200,
+            "diagnosis": "Office Visit",
+            "procedure": "Office Visit",
+            "procedureCode": "99215",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Overbilling",
+          "description": "Routine lab work billed at more than twice the typical maximum",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-LAB-001",
+            "patientName": "Omar Haddad",
+            "amount": 2400,
+            "diagnosis": "Routine lab work",
+            "procedure": "Lab Test",
+            "procedureCode": "80053",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Overbilling",
+          "description": "Emergency visit above the typical price range",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-ER-002",
+            "patientName": "Grace Kim",
+            "amount": 7500,
+            "diagnosis": "Emergency Room Visit",
+            "procedure": "Emergency care",
+            "procedureCode": "99285",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Billing pattern",
+          "description": "Physical therapy with 12 claims this month and flagged frequency",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-FREQ-001",
+            "patientName": "Victor Silva",
+            "amount": 140,
+            "diagnosis": "Physical therapy session",
+            "procedure": "Physical Therapy",
+            "procedureCode": "97110",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 12,
+            "frequencyPattern": "suspicious"
+          }
+        },
+        {
+          "category": "Billing pattern",
+          "description": "Vaccination from a patient with 9 claims this month",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-VAX-001",
+            "patientName": "Hannah Wright",
+            "amount": 45,
+            "diagnosis": "Flu vaccination",
+            "procedure": "Vaccination",
+            "procedureCode": "90686",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 9,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "High value",
+          "description": "Out-of-network knee replacement over $50,000",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-OON-001",
+            "patientName": "Samuel Ortiz",
+            "amount": 58000,
+            "diagnosis": "Knee replacement surgery",
+            "procedure": "Surgery",
+            "procedureCode": "27447",
+            "providerTier": "out-of-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "High value",
+          "description": "In-network spinal fusion above the typical surgery price",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-HV-001",
+            "patientName": "Ruth Adeyemi",
+            "amount": 72000,
+            "diagnosis": "Spinal fusion surgery",
+            "procedure": "Surgery",
+            "procedureCode": "22630",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "High value",
+          "description": "Normally priced in-network hip replacement over $50,000 (policy rule sends it to review)",
+          "expected": "review",
+          "claim": {
+            "claimId": "FRD-POL-001",
+            "patientName": "Maria Lopez",
+            "amount": 55000,
+            "diagnosis": "Hip replacement surgery",
+            "procedure": "Surgery",
+            "procedureCode": "27130",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Not covered",
+          "description": "Cosmetic surgery, out-of-network with flagged frequency",
+          "expected": "deny",
+          "claim": {
+            "claimId": "FRD-COS-001",
+            "patientName": "Leo Novak",
+            "amount": 12000,
+            "diagnosis": "Cosmetic procedure - rhinoplasty",
+            "procedure": "Elective cosmetic surgery",
+            "procedureCode": "30400",
+            "providerTier": "out-of-network",
+            "priorClaimsInMonth": 2,
+            "frequencyPattern": "suspicious"
+          }
+        },
+        {
+          "category": "Legitimate",
+          "description": "MRI just under the typical imaging maximum",
+          "expected": "approve",
+          "claim": {
+            "claimId": "FRD-IMG-001",
+            "patientName": "Ava Brooks",
+            "amount": 2800,
+            "diagnosis": "Back pain - MRI",
+            "procedure": "Imaging - MRI",
+            "procedureCode": "72148",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        },
+        {
+          "category": "Legitimate",
+          "description": "Emergency fracture care just under the typical maximum",
+          "expected": "approve",
+          "claim": {
+            "claimId": "FRD-ER-001",
+            "patientName": "Ethan Clarke",
+            "amount": 5800,
+            "diagnosis": "Emergency Room Visit - fracture",
+            "procedure": "Emergency care",
+            "procedureCode": "99285",
+            "providerTier": "in-network",
+            "priorClaimsInMonth": 0,
+            "frequencyPattern": "normal"
+          }
+        }
+      ]
+    }
+  }
+}

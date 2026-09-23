@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1400px; height: 940px; background: #ffffff; color: #0f1b2d;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif; padding: 44px 52px; position: relative;
+  }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { font-size: 16px; color: #5b6b82; margin-top: 6px; }
+
+  .flow { display: flex; align-items: stretch; gap: 0; margin-top: 36px; height: 560px; }
+  .step {
+    flex: 1; background: #f7f9fc; border: 1px solid #e3e8ef; border-radius: 16px;
+    padding: 22px 22px 20px; display: flex; flex-direction: column;
+  }
+  .arrow { width: 44px; display: grid; place-items: center; color: #9aa8bd; flex-shrink: 0; }
+  .num {
+    width: 28px; height: 28px; border-radius: 50%; background: #1f4fd1; color: #fff;
+    font-size: 14px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0;
+  }
+  .icon {
+    width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center;
+    background: #eaf0fd; color: #1f4fd1; margin: 18px 0 14px; flex-shrink: 0;
+  }
+  .step h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .step p { font-size: 14.5px; color: #4a5568; line-height: 1.55; margin-top: 8px; }
+
+  .ai {
+    margin-top: 14px; background: #fff; border: 1px solid #c9d7fb; border-radius: 12px; padding: 12px 14px;
+  }
+  .ai b { font-size: 13.5px; color: #1f4fd1; display: block; margin-bottom: 4px; }
+  .ai li { display: flex; align-items: flex-start; }
+  .ai li::before { flex-shrink: 0; margin-top: 2px; }
+  .ai ul { list-style: none; font-size: 13.5px; color: #374151; line-height: 1.6; }
+  .ai li::before { content: "?"; display: inline-block; width: 18px; height: 18px; border-radius: 50%;
+    background: #eaf0fd; color: #1f4fd1; font-size: 11px; font-weight: 700; text-align: center; line-height: 18px; margin-right: 8px; }
+  .backup {
+    margin-top: auto; border: 1.5px dashed #b8c4d6; border-radius: 12px; padding: 12px 14px; background: #fff;
+  }
+  .backup b { font-size: 13.5px; display: block; margin-bottom: 3px; }
+  .backup span { font-size: 13px; color: #4a5568; line-height: 1.5; }
+
+  .outcome { display: flex; gap: 12px; align-items: flex-start; background: #fff; border-radius: 12px;
+    border: 1px solid #e3e8ef; padding: 12px 14px; margin-top: 10px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .outcome b { font-size: 14.5px; display: block; }
+  .outcome span { font-size: 13px; color: #4a5568; line-height: 1.45; }
+  .note { font-size: 13px; color: #5b6b82; margin-top: auto; padding-top: 12px; line-height: 1.5; }
+
+  .checklist { margin-top: 12px; list-style: none; }
+  .checklist li { font-size: 14px; color: #374151; padding: 9px 0; border-bottom: 1px solid #e3e8ef; display: flex; gap: 10px; }
+  .checklist li:last-child { border-bottom: 0; }
+  .tick { color: #0f7a52; font-weight: 700; }
+
+  .band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 26px; }
+  .why { border-top: 3px solid #1f4fd1; padding-top: 12px; }
+  .why b { font-size: 15px; display: block; }
+  .why span { font-size: 13.5px; color: #4a5568; line-height: 1.5; display: block; margin-top: 4px; }
+  .foot { position: absolute; left: 52px; right: 52px; bottom: 26px; font-size: 12.5px; color: #8492a6; }
+</style>
+</head>
+<body>
+  <h1>How the claim processor works</h1>
+  <div class="sub">What happens to an insurance claim, from the moment it is submitted to the moment a decision is made</div>
+
+  <div class="flow">
+    <!-- 1 -->
+    <div class="step">
+      <div class="num">1</div>
+      <div class="icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+      </div>
+      <h2>A claim comes in</h2>
+      <p>A staff member enters the claim: who the patient is, what treatment they had, how much it cost, and which provider billed it.</p>
+      <p>For testing, a whole batch of example claims can be loaded at once.</p>
+    </div>
+    <div class="arrow"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+
+    <!-- 2 -->
+    <div class="step" style="flex: 1.35">
+      <div class="num">2</div>
+      <div class="icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+      </div>
+      <h2>An AI model checks it</h2>
+      <p>The claim is sent to <b>Jev</b>, an AI model from TypeSafe AI. It doesn't write text; it answers a fixed set of questions:</p>
+      <div class="ai">
+        <b>Questions it answers include</b>
+        <ul>
+          <li>Approve, deny, or send to a person?</li>
+          <li>How sure is that answer?</li>
+          <li>How urgently does someone need to look?</li>
+        </ul>
+      </div>
+      <div class="backup" style="margin-top: 14px">
+        <b>Backup if the AI can't be reached</b>
+        <span>Built-in rules make the call instead: how medically necessary the treatment is, whether the price is unusual, and whether the billing looks odd.</span>
+      </div>
+    </div>
+    <div class="arrow"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+
+    <!-- 3 -->
+    <div class="step" style="flex: 1.15">
+      <div class="num">3</div>
+      <div class="icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0z"/></svg>
+      </div>
+      <h2>A decision is made</h2>
+      <div class="outcome">
+        <span class="dot" style="background:#0f7a52"></span>
+        <div><b>Approve</b><span>Recommended next step: pay the claim.</span></div>
+      </div>
+      <div class="outcome">
+        <span class="dot" style="background:#b42318"></span>
+        <div><b>Deny</b><span>Recommended next step: send a denial notice explaining how to appeal.</span></div>
+      </div>
+      <div class="outcome">
+        <span class="dot" style="background:#b35c00"></span>
+        <div><b>Send for review</b><span>Anything unusual, and every claim of $50,000 or more, goes to a claims adjuster: a person who makes the final call.</span></div>
+      </div>
+    </div>
+    <div class="arrow"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+
+    <!-- 4 -->
+    <div class="step">
+      <div class="num">4</div>
+      <div class="icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+      </div>
+      <h2>It's recorded and reported</h2>
+      <p>Every claim and its decision is saved. The team can see:</p>
+      <ul class="checklist">
+        <li><span class="tick">✓</span>Totals: how many claims were approved, denied or sent for review</li>
+        <li><span class="tick">✓</span>How much money was claimed and approved</li>
+        <li><span class="tick">✓</span>For each claim, the decision and the reasons behind it</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="why"><b>Routine claims move quickly</b><span>Straightforward claims are decided without waiting in a queue.</span></div>
+    <div class="why"><b>People handle the hard cases</b><span>Unusual prices, odd billing and very large claims are routed to a person.</span></div>
+    <div class="why"><b>Every decision is explained</b><span>Each outcome comes with a confidence level and the reasons for it.</span></div>
+    <div class="why"><b>It always gives an answer</b><span>If the AI service is down, the backup rules keep claims moving.</span></div>
+  </div>
+
+  <div class="foot">This is a demonstration built with made-up claims. It recommends next steps but does not make payments or send letters.</div>
+</body>
+</html>

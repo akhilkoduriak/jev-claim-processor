@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1400px; height: 880px; background: #ffffff;
+    font-family: "Segoe UI", Arial, sans-serif; color: #1f2937;
+    padding: 36px 44px; position: relative;
+  }
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.3px; }
+  .sub { font-size: 14px; color: #6b7280; margin-top: 4px; }
+
+  .zone {
+    position: absolute; border-radius: 14px; padding: 16px 18px;
+    border: 1.5px solid;
+  }
+  .zone-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .zone-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+  .browser  { left: 44px;  top: 110px; width: 400px; height: 600px; background: #f8fafc; border-color: #cbd5e1; }
+  .server   { left: 520px; top: 110px; width: 470px; height: 600px; background: #f0f7ff; border-color: #93c5fd; }
+  .external { left: 1066px; top: 110px; width: 290px; height: 290px; background: #fff7ed; border-color: #fdba74; }
+  .files    { left: 1066px; top: 425px; width: 290px; height: 285px; background: #f0fdf4; border-color: #86efac; }
+
+  .browser .zone-title { color: #475569; }
+  .server .zone-title { color: #1d4ed8; }
+  .external .zone-title { color: #c2410c; }
+  .files .zone-title { color: #15803d; }
+
+  .card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+    padding: 10px 12px; margin-top: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card h3 { font-size: 14px; font-weight: 600; }
+  .card p { font-size: 12px; color: #4b5563; margin-top: 3px; line-height: 1.45; }
+  .card code, .mono { font-family: Consolas, monospace; font-size: 11.5px; color: #374151; }
+  .route { display: flex; gap: 8px; font-family: Consolas, monospace; font-size: 11.5px; margin-top: 3px; }
+  .verb { font-weight: 700; width: 36px; }
+  .get { color: #15803d; } .post { color: #c2410c; }
+
+  .decision { display: flex; gap: 8px; margin-top: 8px; }
+  .branch { flex: 1; border-radius: 8px; padding: 8px 10px; font-size: 12px; line-height: 1.4; }
+  .branch b { display: block; font-size: 12.5px; margin-bottom: 2px; }
+  .b-api { background: #fff7ed; border: 1px solid #fdba74; }
+  .b-mock { background: #f0fdf4; border: 1px dashed #4ade80; }
+
+  svg.arrows { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .lbl { position: absolute; font-size: 11.5px; color: #374151; background: #fff; padding: 1px 6px;
+         border-radius: 4px; border: 1px solid #e5e7eb; white-space: nowrap; }
+
+  .legend { position: absolute; left: 44px; top: 735px; right: 44px; display: flex; gap: 28px;
+            font-size: 12.5px; color: #4b5563; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid; display: inline-block; }
+  .flow { position: absolute; left: 44px; top: 785px; right: 44px; font-size: 12.5px; color: #4b5563; line-height: 1.7; }
+  .flow b { color: #1f2937; }
+  .step { display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #1d4ed8; color: #fff;
+          font-size: 11px; text-align: center; line-height: 18px; font-weight: 700; margin-right: 4px; }
+</style>
+</head>
+<body>
+  <h1>Smart Insurance Claim Processor: Architecture</h1>
+  <div class="sub">How a claim moves from the browser to a decision and into storage</div>
+
+  <!-- Browser -->
+  <div class="zone browser">
+    <div class="zone-title">Browser</div>
+    <div class="zone-meta">React app · <span class="mono">frontend/</span> · localhost:3000</div>
+
+    <div class="card">
+      <h3>App.js</h3>
+      <p>Side bar navigation and shared state. Polls decisions and engine status every 2 s.</p>
+    </div>
+    <div class="card">
+      <h3>ClaimForm</h3>
+      <p><b>Single claim:</b> one claim at a time.<br><b>Test datasets:</b> Quick (3), Comprehensive (32), Fraud checks (11), with expected outcomes.</p>
+    </div>
+    <div class="card">
+      <h3>Overview</h3>
+      <p>Outcomes, claim value, engine health, policy-rule reviews and test matches.</p>
+    </div>
+    <div class="card">
+      <h3>Claims</h3>
+      <p>Search and filter every decision. Expand a row for the assessment, engine and reasons.</p>
+    </div>
+  </div>
+
+  <!-- Server -->
+  <div class="zone server">
+    <div class="zone-title">API server</div>
+    <div class="zone-meta">Node.js + Express · <span class="mono">backend/server.js</span> · localhost:5000</div>
+
+    <div class="card">
+      <h3>REST routes</h3>
+      <div class="route"><span class="verb post">POST</span>/api/claims/process</div>
+      <div class="route"><span class="verb get">GET</span>/api/claims · /api/decisions · /api/decisions/:id</div>
+      <div class="route"><span class="verb get">GET</span>/api/stats · /api/engine · /api/datasets · /health</div>
+      <div class="route"><span class="verb post">POST</span>/api/reset</div>
+    </div>
+
+    <div class="card">
+      <h3>Decision engine <span class="mono" style="font-weight:400">backend/decision-engine.js</span></h3>
+      <p>Tries Jev first. Uses the rules if Jev is off, has no key, or the call fails. Then applies the same policy rules to either result.</p>
+      <div class="decision">
+        <div class="branch b-api"><b>Jev client</b> <span class="mono">jev-client.js</span><br>Sends the claim and 6 questions to <code>/systemone</code>. Maps the answers to a decision, confidence and alert level.</div>
+        <div class="branch b-mock"><b>Fallback rules</b> <span class="mono">rules.js</span><br>Care type, medical necessity, price check and billing check.</div>
+      </div>
+      <p style="margin-top:8px"><b>Policy rules:</b> approvals of $50,000+ and decisions under 60% confidence go to review.</p>
+    </div>
+
+    <div class="card">
+      <h3>Decision record</h3>
+      <p><code>decision</code> approve / deny / review · <code>confidence</code> 0–1 · <code>alertLevel</code> · <code>reasons</code> · <code>recommendedAction</code> · <code>processingTimeMs</code> · <code>usedRealAPI</code></p>
+    </div>
+  </div>
+
+  <!-- External -->
+  <div class="zone external">
+    <div class="zone-title">External service</div>
+    <div class="zone-meta">Called over HTTPS</div>
+    <div class="card">
+      <h3>Jev API (TypeSafe AI)</h3>
+      <p><code>POST /v1/systemone</code>. Answers every question in one pass. Authenticated with a <code>Bearer</code> key.</p>
+    </div>
+    <div class="card">
+      <h3>If the call fails</h3>
+      <p>The claim goes to the fallback rules, so a decision is always returned. After a rejected key, Jev is skipped for 60 s.</p>
+    </div>
+  </div>
+
+  <!-- Files -->
+  <div class="zone files">
+    <div class="zone-title">Local files</div>
+    <div class="zone-meta">JSON on disk</div>
+    <div class="card">
+      <h3>data/</h3>
+      <p><code>claims.json</code>: claims as submitted<br><code>decisions.json</code>: one decision per claim, with engine and reasons</p>
+    </div>
+    <div class="card">
+      <h3>sample-claims.json</h3>
+      <p>3 test datasets (46 claims) with expected outcomes. Used by the app and <code>load-samples.js</code>.</p>
+    </div>
+  </div>
+
+  <!-- Arrows -->
+  <svg class="arrows" width="1400" height="880">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+      </marker>
+      <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+      </marker>
+      <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#15803d"/>
+      </marker>
+    </defs>
+    <!-- browser <-> server -->
+    <line x1="446" y1="330" x2="516" y2="330" stroke="#475569" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+    <!-- server <-> external -->
+    <line x1="992" y1="235" x2="1062" y2="235" stroke="#c2410c" stroke-width="2" marker-end="url(#o)" marker-start="url(#o)"/>
+    <!-- server <-> files -->
+    <line x1="992" y1="568" x2="1062" y2="568" stroke="#15803d" stroke-width="2" marker-end="url(#g)" marker-start="url(#g)"/>
+  </svg>
+  <div class="lbl" style="left:449px; top:300px;">HTTP · JSON</div>
+  <div class="lbl" style="left:996px; top:205px;">HTTPS</div>
+  <div class="lbl" style="left:990px; top:538px;">read / write</div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:#f8fafc;border-color:#cbd5e1"></i>Runs in the browser</span>
+    <span><i class="sw" style="background:#f0f7ff;border-color:#93c5fd"></i>Runs on the Node server</span>
+    <span><i class="sw" style="background:#fff7ed;border-color:#fdba74"></i>Third-party service</span>
+    <span><i class="sw" style="background:#f0fdf4;border-color:#86efac"></i>Files on disk</span>
+  </div>
+  <div class="flow">
+    <span class="step">1</span><b>Submit:</b> ClaimForm posts to <span class="mono">/api/claims/process</span>. &nbsp;
+    <span class="step">2</span><b>Decide:</b> Jev or the fallback rules, then policy rules. &nbsp;
+    <span class="step">3</span><b>Store:</b> the claim and its decision are appended to <span class="mono">data/</span>. &nbsp;
+    <span class="step">4</span><b>Show:</b> the next poll updates the Overview and Claims pages.
+  </div>
+</body>
+</html>
