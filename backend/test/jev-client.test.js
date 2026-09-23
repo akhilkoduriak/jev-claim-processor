@@ -133,7 +133,13 @@ test('does not retry a rejected key', async () => {
 
 test('times out instead of hanging', async () => {
   const hang = (url, init) => new Promise((resolve, reject) => {
-    init.signal.addEventListener('abort', () => reject(init.signal.reason));
+    // AbortSignal.timeout doesn't keep the event loop alive by itself (a real request would),
+    // so hold it open until the abort fires. Without this, Node 22 cancels the test file.
+    const keepAlive = setTimeout(() => {}, 5000);
+    init.signal.addEventListener('abort', () => {
+      clearTimeout(keepAlive);
+      reject(init.signal.reason);
+    });
   });
   await assert.rejects(jev.assess(claim, { apiKey: 'k', apiUrl: 'https://x.test', timeoutMs: 50, fetchImpl: hang }), { kind: 'timeout' });
 });

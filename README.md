@@ -16,7 +16,7 @@ A plain-language overview for non-technical readers. The source is [docs/how-it-
 
 ## Quick start
 
-Requires Node.js 18 or later.
+Requires Node.js 22 or later (24 recommended).
 
 ```bash
 npm run install-all   # installs root, backend and frontend packages
@@ -131,7 +131,7 @@ Runs 32 backend tests with Node's built-in test runner. They don't need the app 
 
 [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every pull request and every push to `main`:
 
-1. **Backend tests** on Node 20, 22 and 24.
+1. **Backend tests** on Node 22 and 24.
 2. **Frontend build**, failing on any lint warning.
 3. **Docker image**: builds the image, starts it, and runs a smoke test that loads the app and submits two claims.
 4. **Publish** (pushes to `main` only): pushes the image to GitHub Container Registry as `ghcr.io/<owner>/<repo>:latest` and `:sha-<commit>`.

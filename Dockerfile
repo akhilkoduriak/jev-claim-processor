@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # 1. Build the React frontend
-FROM node:22-alpine AS frontend
+FROM node:24-alpine AS frontend
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -9,7 +9,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # 2. Runtime: the Express API also serves the built frontend
-FROM node:22-alpine
+FROM node:24-alpine
 ENV NODE_ENV=production \
     PORT=5000 \
     DATA_DIR=/app/data
