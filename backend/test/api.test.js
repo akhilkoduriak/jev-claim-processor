@@ -3,6 +3,10 @@ const os = require('os');
 const path = require('path');
 
 process.env.USE_MOCK_JEV = 'true';
+// Keep backend/.env's real keys out of the tests (dotenv won't override variables that are already set).
+process.env.JEV_API_KEY = '';
+process.env.ANTHROPIC_API_KEY = '';
+process.env.LLM_PROVIDER = 'anthropic';
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'claims-test-'));
 process.env.FRONTEND_BUILD_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'claims-build-'));
 fs.writeFileSync(path.join(process.env.FRONTEND_BUILD_DIR, 'index.html'), '<div id="root"></div>');
@@ -117,6 +121,19 @@ test('serves the built frontend for app routes but not for API routes', async ()
   assert.match(await deep.text(), /id="root"/);
   assert.strictEqual((await fetch(`${base}/api/decisions/nope`)).status, 404);
   assert.strictEqual((await (await fetch(`${base}/health`)).json()).status, 'ok');
+});
+
+test('compare: config route, and a clear error when keys are missing', async () => {
+  const cfg = await (await fetch(`${base}/api/compare/config`)).json();
+  assert.strictEqual(cfg.llm.provider, 'anthropic');
+  assert.strictEqual(cfg.llm.configured, false);
+  assert.strictEqual(cfg.jev.configured, false);
+  const res = await post('/api/compare', valid);
+  assert.strictEqual(res.status, 400);
+  assert.match((await res.json()).error, /JEV_API_KEY and ANTHROPIC_API_KEY/);
+  const bad = await post('/api/compare', { ...valid, amount: -5 });
+  assert.strictEqual(bad.status, 400);
+  assert.deepStrictEqual(await (await fetch(`${base}/api/comparisons`)).json(), []);
 });
 
 test('reset clears everything', async () => {

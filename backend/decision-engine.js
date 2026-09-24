@@ -20,7 +20,7 @@ const config = () => ({
   minConfidence: Number(process.env.MIN_AUTO_DECISION_CONFIDENCE) || 0.6
 });
 
-const isConfigured = (c) => c.apiKey && !/^your_/.test(c.apiKey);
+const isConfigured = (c) => Boolean(c.apiKey) && !/^your_/.test(c.apiKey);
 
 const status = {
   lastSuccessAt: null,
@@ -154,9 +154,21 @@ async function decide(claim, { fetchImpl } = {}) {
   };
 }
 
+/** Record the outcome of a Jev call made elsewhere (the comparison page), so status stays accurate. */
+function recordJevCall({ ok, model, error }) {
+  if (ok) {
+    status.lastSuccessAt = new Date().toISOString();
+    status.model = model || status.model;
+  } else {
+    status.lastErrorAt = new Date().toISOString();
+    status.lastError = error.message;
+    status.lastErrorKind = error.kind || 'unknown';
+  }
+}
+
 // For tests.
 function resetStatus() {
   Object.keys(status).forEach((k) => { status[k] = null; });
 }
 
-module.exports = { decide, getStatus, applyGuardrails, resetStatus };
+module.exports = { decide, getStatus, applyGuardrails, resetStatus, recordJevCall, config, isConfigured };
