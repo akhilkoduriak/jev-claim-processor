@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const engine = require('./decision-engine');
+const comparison = require('./comparison');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +17,7 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../data');
 const SAMPLES_FILE = path.join(__dirname, '../sample-claims.json');
 const claimsFile = path.join(DATA_DIR, 'claims.json');
 const decisionsFile = path.join(DATA_DIR, 'decisions.json');
+const comparisonsFile = path.join(DATA_DIR, 'comparisons.json');
 
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
@@ -26,6 +28,7 @@ function initializeStorage() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(claimsFile)) fs.writeFileSync(claimsFile, '[]');
   if (!fs.existsSync(decisionsFile)) fs.writeFileSync(decisionsFile, '[]');
+  if (!fs.existsSync(comparisonsFile)) fs.writeFileSync(comparisonsFile, '[]');
 }
 
 function readList(file) {
@@ -165,7 +168,45 @@ app.get('/api/datasets', (req, res) => {
 app.post('/api/reset', (req, res) => {
   fs.writeFileSync(claimsFile, '[]');
   fs.writeFileSync(decisionsFile, '[]');
+  fs.writeFileSync(comparisonsFile, '[]');
   res.json({ success: true, message: 'Data cleared' });
+});
+
+// ---------- Jev vs LLM comparison ----------
+
+app.get('/api/compare/config', (req, res) => {
+  res.json(comparison.getConfig());
+});
+
+app.post('/api/compare', async (req, res) => {
+  const { claim, error } = parseClaim(req.body);
+  if (error) return res.status(400).json({ error });
+
+  const cfg = comparison.getConfig();
+  const missing = [];
+  if (!cfg.jev.configured) missing.push('JEV_API_KEY');
+  if (!cfg.llm.configured) missing.push(cfg.llm.provider === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY');
+  if (missing.length) {
+    return res.status(400).json({ error: `Set ${missing.join(' and ')} in backend/.env to run comparisons` });
+  }
+
+  try {
+    const result = await comparison.compareClaim(claim);
+    append(comparisonsFile, result);
+    res.json(result);
+  } catch (err) {
+    console.error('Error comparing claim:', err);
+    res.status(500).json({ error: 'The comparison could not be run' });
+  }
+});
+
+app.get('/api/comparisons', (req, res) => {
+  res.json(readList(comparisonsFile));
+});
+
+app.delete('/api/comparisons', (req, res) => {
+  fs.writeFileSync(comparisonsFile, '[]');
+  res.json({ success: true });
 });
 
 // In production (for example the Docker image) the API also serves the built frontend.

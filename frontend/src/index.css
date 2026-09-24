@@ -362,6 +362,19 @@ input[readonly] { background: var(--surface-2); color: var(--text-2); }
 .progress { height: 6px; border-radius: 3px; background: var(--border-soft); overflow: hidden; }
 .progress span { display: block; height: 100%; background: var(--primary); transition: width 0.2s; }
 
+/* Compare */
+.compare-runs { display: flex; flex-direction: column; }
+.compare-run {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border-soft);
+}
+.compare-run:last-child { border-bottom: 0; }
+.compare-agree { display: flex; gap: 28px; flex-wrap: wrap; font-size: 13.5px; color: var(--text-2); border-top: 1px solid var(--border); }
+.compare-agree strong { color: var(--text); }
+.row-strong td { font-weight: 600; background: var(--surface-2); }
+.small { font-size: 12px; }
+.truncate-block { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+
 /* Empty */
 .empty { text-align: center; padding: 64px 24px; }
 .empty-sm { padding: 40px 24px; }

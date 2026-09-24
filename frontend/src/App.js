@@ -3,6 +3,7 @@ import axios from 'axios';
 import Dashboard from './components/Dashboard';
 import ClaimForm from './components/ClaimForm';
 import ClaimsList from './components/ClaimsList';
+import Compare from './components/Compare';
 import Icon from './components/Icon';
 import { DECISION_LABELS } from './components/format';
 
@@ -13,7 +14,8 @@ const API_LABEL = API_URL || window.location.origin;
 const PAGES = {
   overview: { label: 'Overview', icon: 'grid', subtitle: 'Decision volume, outcomes and engine health' },
   submit: { label: 'New claim', icon: 'plus', subtitle: 'Submit a single claim or load a test dataset' },
-  claims: { label: 'Claims', icon: 'list', subtitle: 'Every processed claim and the reasoning behind its decision' }
+  claims: { label: 'Claims', icon: 'list', subtitle: 'Every processed claim and the reasoning behind its decision' },
+  compare: { label: 'Jev vs LLM', icon: 'bars', subtitle: 'Tokens, latency, cost and agreement for Jev and an LLM on the same claims' }
 };
 
 const pageFromHash = () => {
@@ -211,6 +213,7 @@ function App() {
             />
           )}
           {page === 'claims' && <ClaimsList decisions={decisions} onNavigate={setPage} />}
+          {page === 'compare' && <Compare apiUrl={API_URL} />}
         </main>
       </div>
     </div>

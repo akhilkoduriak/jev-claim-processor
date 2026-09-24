@@ -20,7 +20,7 @@ const config = () => ({
   minConfidence: Number(process.env.MIN_AUTO_DECISION_CONFIDENCE) || 0.6
 });
 
-const isConfigured = (c) => c.apiKey && !/^your_/.test(c.apiKey);
+const isConfigured = (c) => Boolean(c.apiKey) && !/^your_/.test(c.apiKey);
 
 const status = {
   lastSuccessAt: null,
@@ -159,4 +159,4 @@ function resetStatus() {
   Object.keys(status).forEach((k) => { status[k] = null; });
 }
 
-module.exports = { decide, getStatus, applyGuardrails, resetStatus };
+module.exports = { decide, getStatus, applyGuardrails, resetStatus, config, isConfigured };
