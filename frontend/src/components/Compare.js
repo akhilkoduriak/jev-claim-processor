@@ -63,6 +63,8 @@ function Compare({ apiUrl }) {
   useEffect(() => { load(); }, [load]);
 
   const s = useMemo(() => summarize(results), [results]);
+  const lastLlmError = useMemo(() => [...results].reverse().find((r) => !r.llm.ok)?.llm.error, [results]);
+  const lastJevError = useMemo(() => [...results].reverse().find((r) => !r.jev.ok)?.jev.error, [results]);
   const ready = config && config.jev.configured && config.llm.configured;
   const llmName = config ? PROVIDER_NAMES[config.llm.provider] || config.llm.provider : 'LLM';
 
@@ -81,6 +83,14 @@ function Compare({ apiUrl }) {
         const body = await res.json();
         if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
         setResults((prev) => [...prev, body]);
+        // A rejected key or request fails the same way on every claim, so stop instead of repeating it.
+        const fatal = [['Jev', body.jev], [llmName, body.llm]].find(
+          ([, side]) => !side.ok && (side.errorKind === 'auth' || [400, 401, 403, 404].includes(side.errorStatus))
+        );
+        if (fatal) {
+          setError(`Stopped after ${sample.claim.claimId}: ${fatal[1].error}`);
+          break;
+        }
       } catch (e) {
         setError(`${sample.claim.claimId}: ${e.message}`);
         break;
@@ -180,6 +190,21 @@ function Compare({ apiUrl }) {
         </div>
       ) : (
         <>
+          {(s.llm.failed > 0 || s.jev.failed > 0) && (
+            <div className="banner banner-error">
+              <Icon name="alert" />
+              <span>
+                {s.llm.failed > 0 && <><strong>{s.llm.failed} of {results.length} {llmName} calls failed.</strong> Latest error: {lastLlmError}<br /></>}
+                {s.jev.failed > 0 && <><strong>{s.jev.failed} of {results.length} Jev calls failed.</strong> Latest error: {lastJevError}<br /></>}
+                {/workspace/i.test(lastLlmError || '') && (
+                  <>To fix: copy your workspace ID (starts with <code>wrkspc_</code>) from the Anthropic Console under Settings → Workspaces,
+                  paste it after <code>ANTHROPIC_WORKSPACE_ID=</code> in <code>backend/.env</code> and save. Or use an API key created inside a workspace.<br /></>
+                )}
+                Use <strong>Clear results</strong> to remove failed runs.
+              </span>
+            </div>
+          )}
+
           <section className="panel">
             <div className="panel-head">
               <div>
@@ -201,7 +226,7 @@ function Compare({ apiUrl }) {
                     <td className="num">{num(s.llm.output)}</td>
                     <td className="num">{ratio(s.llm.output, s.jev.output)}</td>
                   </tr>
-                  <tr><td>Latency</td><td className="num">{num(s.jev.latency)} ms</td><td className="num">{num(s.llm.latency)} ms</td><td className="num">{ratio(s.llm.latency, s.jev.latency)}</td></tr>
+                  <tr><td>Latency</td><td className="num">{s.jev.latency == null ? '—' : `${num(s.jev.latency)} ms`}</td><td className="num">{s.llm.latency == null ? '—' : `${num(s.llm.latency)} ms`}</td><td className="num">{ratio(s.llm.latency, s.jev.latency)}</td></tr>
                   <tr><td>Cost per claim</td><td className="num">{perClaim(s.jev.cost)}</td><td className="num">{perClaim(s.llm.cost)}</td><td className="num">{ratio(s.llm.cost, s.jev.cost)}</td></tr>
                   <tr className="row-strong"><td>Cost per 1 million claims</td><td className="num">{s.jev.perMillion == null ? '—' : money(s.jev.perMillion)}</td><td className="num">{s.llm.perMillion == null ? '—' : money(s.llm.perMillion)}</td><td className="num">{ratio(s.llm.perMillion, s.jev.perMillion)}</td></tr>
                   {s.jev.tested > 0 && (

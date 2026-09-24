@@ -113,7 +113,7 @@ async function runLlm(claim, clients = {}) {
   };
 }
 
-const failed = (err) => ({ ok: false, error: err.message, errorKind: err.kind || null });
+const failed = (err) => ({ ok: false, error: err.message, errorKind: err.kind || null, errorStatus: err.status || null });
 
 /**
  * Compare one claim. Both engines run at the same time.

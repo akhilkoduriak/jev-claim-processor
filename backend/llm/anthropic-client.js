@@ -20,6 +20,9 @@ class LlmError extends Error {
   }
 }
 
+// The API's own message, without the SDK's "400 {json}" prefix.
+const apiMessage = (err) => err?.error?.error?.message || err?.error?.message || err.message;
+
 function toLlmError(err) {
   if (err instanceof LlmError) return err;
   if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
@@ -29,13 +32,13 @@ function toLlmError(err) {
     return new LlmError('Anthropic rate limit reached (HTTP 429)', { kind: 'rate_limit', status: 429 });
   }
   if (err instanceof Anthropic.BadRequestError) {
-    return new LlmError(`Anthropic rejected the request (HTTP 400): ${err.message}`, { kind: 'http', status: 400 });
+    return new LlmError(`Anthropic rejected the request (HTTP 400): ${apiMessage(err)}`, { kind: 'http', status: 400 });
   }
   if (err instanceof Anthropic.APIConnectionError) {
     return new LlmError(`Could not reach Anthropic: ${err.message}`, { kind: 'network' });
   }
   if (err instanceof Anthropic.APIError) {
-    return new LlmError(`Anthropic API error (HTTP ${err.status}): ${err.message}`, { kind: 'http', status: err.status });
+    return new LlmError(`Anthropic API error (HTTP ${err.status}): ${apiMessage(err)}`, { kind: 'http', status: err.status });
   }
   return new LlmError(err.message || String(err), { kind: 'network' });
 }

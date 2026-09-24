@@ -92,6 +92,9 @@ function summarize(results) {
       continue;
     }
     results.push(r);
+    const fatal = [['Jev', r.jev], ['LLM', r.llm]].find(
+      ([, side]) => !side.ok && (side.errorKind === 'auth' || [400, 401, 403, 404].includes(side.errorStatus))
+    );
     const jd = r.jev.ok ? r.jev.answers.decision : 'ERROR';
     const ld = r.llm.ok ? r.llm.answers.decision : 'ERROR';
     const agree = r.agreement ? `${r.agreement.fields}/${r.agreement.total}` : '-';
@@ -104,6 +107,14 @@ function summarize(results) {
     if (!r.jev.ok) console.log(`    Jev error: ${r.jev.error}`);
     if (!r.llm.ok) console.log(`    LLM error: ${r.llm.error}`);
     if (r.agreement && r.agreement.differences.length) console.log(`    differs on: ${r.agreement.differences.join(', ')}`);
+    if (fatal) {
+      console.log(`
+Stopped: ${fatal[0]} rejected the request, and it would fail the same way on every claim.`);
+      if (/workspace/i.test(fatal[1].error)) {
+        console.log('Fix: set ANTHROPIC_WORKSPACE_ID in backend/.env (Anthropic Console > Settings > Workspaces), or use a key created inside a workspace.');
+      }
+      break;
+    }
   }
 
   const s = summarize(results);

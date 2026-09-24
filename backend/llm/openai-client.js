@@ -9,6 +9,9 @@ const { LlmError } = require('./anthropic-client');
 
 const DEFAULT_MODEL = 'gpt-6-sol';
 
+// The API's own message, without the SDK's "400 {json}" prefix.
+const apiMessage = (err) => err?.error?.error?.message || err?.error?.message || err.message;
+
 function toLlmError(err) {
   if (err instanceof LlmError) return err;
   if (err instanceof OpenAI.AuthenticationError || err instanceof OpenAI.PermissionDeniedError) {
@@ -18,13 +21,13 @@ function toLlmError(err) {
     return new LlmError('OpenAI rate limit reached (HTTP 429)', { kind: 'rate_limit', status: 429 });
   }
   if (err instanceof OpenAI.BadRequestError) {
-    return new LlmError(`OpenAI rejected the request (HTTP 400): ${err.message}`, { kind: 'http', status: 400 });
+    return new LlmError(`OpenAI rejected the request (HTTP 400): ${apiMessage(err)}`, { kind: 'http', status: 400 });
   }
   if (err instanceof OpenAI.APIConnectionError) {
     return new LlmError(`Could not reach OpenAI: ${err.message}`, { kind: 'network' });
   }
   if (err instanceof OpenAI.APIError) {
-    return new LlmError(`OpenAI API error (HTTP ${err.status}): ${err.message}`, { kind: 'http', status: err.status });
+    return new LlmError(`OpenAI API error (HTTP ${err.status}): ${apiMessage(err)}`, { kind: 'http', status: err.status });
   }
   return new LlmError(err.message || String(err), { kind: 'network' });
 }
