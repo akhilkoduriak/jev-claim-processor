@@ -91,7 +91,6 @@ function ClaimsList({ decisions, onNavigate }) {
                 <th>Alert</th>
                 <th>Confidence</th>
                 <th>Engine</th>
-                <th>Processed</th>
               </tr>
             </thead>
             <tbody>
@@ -115,11 +114,10 @@ function ClaimsList({ decisions, onNavigate }) {
                       <td><AlertTag level={d.alertLevel} /></td>
                       <td><Confidence value={d.confidence} /></td>
                       <td><EngineTag usedRealAPI={d.usedRealAPI} /></td>
-                      <td className="muted">{dateTime(d.processedAt)}</td>
                     </tr>
                     {open && (
                       <tr className="detail-row">
-                        <td colSpan={10}>
+                        <td colSpan={9}>
                           <ClaimDetail d={d} />
                         </td>
                       </tr>
@@ -169,6 +167,7 @@ function ClaimDetail({ d }) {
             <dt>Confidence</dt><dd>{Math.round((d.confidence || 0) * 100)}%</dd>
             <dt>Alert level</dt><dd><AlertTag level={d.alertLevel} /></dd>
             <dt>Decision time</dt><dd>{duration(d.processingTimeMs || 0)}</dd>
+            <dt>Processed</dt><dd>{dateTime(d.processedAt)}</dd>
             {c.expectedDecision && (
               <>
                 <dt>Test expected</dt>
