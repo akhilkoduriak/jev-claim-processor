@@ -16,7 +16,7 @@ ENV NODE_ENV=production \
 WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
-COPY backend/*.js ./
+COPY backend/ ./
 COPY sample-claims.json /app/sample-claims.json
 COPY --from=frontend /app/frontend/build /app/frontend/build
 RUN mkdir -p /app/data && chown node:node /app/data

@@ -1,6 +1,6 @@
 # Testing guide
 
-A step-by-step plan for testing the claim processor. Parts 1 to 3 take about 15 minutes. Part 4 needs a working Jev API key.
+A step-by-step plan for testing the claim processor. Parts 1 to 3 take about 15 minutes. Part 4 needs a working Jev API key, and Part 5 also needs a Claude or OpenAI key.
 
 ## Before you start
 
@@ -19,7 +19,7 @@ In a second terminal, from the project root:
 npm test
 ```
 
-**Expected:** `tests 32`, `pass 32`, `fail 0`. You don't need the app running or a Jev key for this.
+**Expected:** `tests 57`, `pass 57`, `fail 0`. You don't need the app running or a Jev key for this.
 
 ## Part 2: Test datasets (3 minutes)
 
@@ -101,6 +101,26 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" "$(setting JEV_API_URL)$(setting J
   -H "Authorization: Bearer $(setting JEV_API_KEY)" -H "Content-Type: application/json" \
   -d '{"model":"jev-latest","state":"test","questions":{"q":{"type":"choice","instructions":"Is this a test?","criteria":{"yes":"yes","no":"no"}}}}'
 ```
+
+## Part 5: Jev vs LLM comparison
+
+This part makes paid calls: with Claude Opus 5, the Quick Test costs about 3 cents and all 46 claims about $0.45.
+
+1. Add your LLM key to `backend/.env` and save: `ANTHROPIC_API_KEY` for Claude, or set `LLM_PROVIDER=openai` and add `OPENAI_API_KEY`.
+2. Open **Jev vs LLM**. Under **Connections**, both cards should say **Connected** or **Ready**. If a card shows another status, follow its **What to do** steps, save `backend/.env`, and click **Check again**.
+3. Check the connection states. Change `backend/.env`, save, click **Check again**, and put it back afterwards:
+
+   | Change | Expected LLM status |
+   | --- | --- |
+   | Remove the LLM key | **Not configured**, with where to get a key |
+   | Change one character of the key | **Key rejected** |
+   | Set `ANTHROPIC_MODEL=claude-opus-9` | **Model not available**, with models the key can use |
+   | A Claude key that isn't tied to a workspace, with `ANTHROPIC_WORKSPACE_ID` empty | **Workspace ID needed** |
+
+   While the LLM isn't connected, the **Run** buttons are disabled and a message says why.
+4. Click **Run 3 claims** on Quick Test. The results show averages per claim for both engines, the cost per 1 million claims, agreement, and a claim-by-claim table. Every column header lines up with its numbers.
+5. Run the same dataset again. The averages still count each claim once ("latest result for each").
+6. From a terminal, `node compare-llm.js quick_test` prints the same comparison and exits with code 0.
 
 ## Reporting a problem
 

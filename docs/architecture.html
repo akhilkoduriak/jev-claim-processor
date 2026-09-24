@@ -82,8 +82,8 @@
       <p>Outcomes, claim value, engine health, policy-rule reviews and test matches.</p>
     </div>
     <div class="card">
-      <h3>Claims</h3>
-      <p>Search and filter every decision. Expand a row for the assessment, engine and reasons.</p>
+      <h3>Claims · Jev vs LLM</h3>
+      <p>Search and filter every decision. Compare Jev with Claude or OpenAI on the test datasets.</p>
     </div>
   </div>
 
@@ -97,6 +97,8 @@
       <div class="route"><span class="verb post">POST</span>/api/claims/process</div>
       <div class="route"><span class="verb get">GET</span>/api/claims · /api/decisions · /api/decisions/:id</div>
       <div class="route"><span class="verb get">GET</span>/api/stats · /api/engine · /api/datasets · /health</div>
+      <div class="route"><span class="verb post">POST</span>/api/compare</div>
+      <div class="route"><span class="verb get">GET</span>/api/compare/status · /api/comparisons</div>
       <div class="route"><span class="verb post">POST</span>/api/reset</div>
     </div>
 
@@ -111,22 +113,22 @@
     </div>
 
     <div class="card">
-      <h3>Decision record</h3>
-      <p><code>decision</code> approve / deny / review · <code>confidence</code> 0–1 · <code>alertLevel</code> · <code>reasons</code> · <code>recommendedAction</code> · <code>processingTimeMs</code> · <code>usedRealAPI</code></p>
+      <h3>Comparison <span class="mono" style="font-weight:400">comparison.js · llm/</span></h3>
+      <p>Sends a claim to Jev and the LLM at the same time. Records tokens, latency, list-price cost and agreement on each answer. Checks both connections before a run.</p>
     </div>
   </div>
 
   <!-- External -->
   <div class="zone external">
-    <div class="zone-title">External service</div>
+    <div class="zone-title">External services</div>
     <div class="zone-meta">Called over HTTPS</div>
     <div class="card">
       <h3>Jev API (TypeSafe AI)</h3>
       <p><code>POST /v1/systemone</code>. Answers every question in one pass. Authenticated with a <code>Bearer</code> key.</p>
     </div>
     <div class="card">
-      <h3>If the call fails</h3>
-      <p>The claim goes to the fallback rules, so a decision is always returned. After a rejected key, Jev is skipped for 60 s.</p>
+      <h3>LLM: Claude or OpenAI</h3>
+      <p>Jev vs LLM page only. Gets the same six questions and replies in strict JSON, for a token, cost and answer comparison.</p>
     </div>
   </div>
 
@@ -136,11 +138,11 @@
     <div class="zone-meta">JSON on disk</div>
     <div class="card">
       <h3>data/</h3>
-      <p><code>claims.json</code>: claims as submitted<br><code>decisions.json</code>: one decision per claim, with engine and reasons</p>
+      <p><code>claims.json</code> · <code>decisions.json</code> · <code>comparisons.json</code>: claims, decisions with engine and reasons, and comparison results</p>
     </div>
     <div class="card">
       <h3>sample-claims.json</h3>
-      <p>3 test datasets (46 claims) with expected outcomes. Used by the app and <code>load-samples.js</code>.</p>
+      <p>46 test claims with expected outcomes, in 3 datasets.</p>
     </div>
   </div>
 

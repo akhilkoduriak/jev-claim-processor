@@ -178,6 +178,15 @@ app.get('/api/compare/config', (req, res) => {
   res.json(comparison.getConfig());
 });
 
+app.get('/api/compare/status', async (req, res) => {
+  try {
+    res.json(await comparison.getStatus({ force: req.query.refresh === '1' }));
+  } catch (err) {
+    console.error('Error checking connections:', err);
+    res.status(500).json({ error: 'Could not check connections' });
+  }
+});
+
 app.post('/api/compare', async (req, res) => {
   const { claim, error } = parseClaim(req.body);
   if (error) return res.status(400).json({ error });

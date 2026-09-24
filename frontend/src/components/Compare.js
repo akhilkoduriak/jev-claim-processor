@@ -11,26 +11,34 @@ const perClaim = (n) => (n == null ? '—' : n < 0.01 ? `$${n.toFixed(6)}` : `$$
 const ratio = (llm, jev) => (llm && jev ? `${num(llm / jev, 1)}×` : '—');
 const priceLabel = (p) => (p ? `$${p.input} in / $${p.output} out per 1M tokens` : 'price unknown');
 
+/**
+ * Every figure uses the same set: the latest result for each claim where both
+ * engines answered. Claims run more than once count once; failed calls are
+ * counted separately and never affect the averages.
+ */
 function summarize(results) {
-  const both = results.filter((r) => r.jev.ok && r.llm.ok);
+  const latest = new Map();
+  results.forEach((r) => { if (r.jev.ok && r.llm.ok) latest.set(r.claimId, r); });
+  const both = [...latest.values()];
+  const tested = both.filter((r) => r.expectedDecision);
   const side = (key) => {
-    const ok = results.filter((r) => r[key].ok);
-    const cost = avg(ok.map((r) => r[key].costUsd).filter((c) => c != null));
-    const tested = ok.filter((r) => r.expectedDecision);
+    const cost = avg(both.map((r) => r[key].costUsd).filter((c) => c != null));
     return {
-      failed: results.length - ok.length,
-      input: avg(ok.map((r) => r[key].usage.inputTokens)),
-      output: avg(ok.map((r) => r[key].usage.outputTokens)),
-      reasoning: avg(ok.map((r) => r[key].usage.reasoningTokens).filter((t) => t != null)),
-      latency: avg(ok.map((r) => r[key].latencyMs)),
+      input: avg(both.map((r) => r[key].usage.inputTokens)),
+      output: avg(both.map((r) => r[key].usage.outputTokens)),
+      reasoning: avg(both.map((r) => r[key].usage.reasoningTokens).filter((t) => t != null)),
+      latency: avg(both.map((r) => r[key].latencyMs)),
       cost,
       perMillion: cost == null ? null : cost * 1e6,
-      tested: tested.length,
       matched: tested.filter((r) => r[key].answers.decision === r.expectedDecision).length
     };
   };
   return {
+    runs: results.length,
     compared: both.length,
+    tested: tested.length,
+    failedJev: results.filter((r) => !r.jev.ok).length,
+    failedLlm: results.filter((r) => !r.llm.ok).length,
     jev: side('jev'),
     llm: side('llm'),
     decisionAgree: both.filter((r) => r.agreement.decision).length,
@@ -38,35 +46,91 @@ function summarize(results) {
   };
 }
 
+const TONES = {
+  connected: 'success',
+  ready: 'neutral',
+  not_configured: 'warning',
+  workspace_required: 'warning',
+  model_unavailable: 'warning',
+  rate_limited: 'warning',
+  disabled: 'neutral',
+  auth_error: 'danger',
+  unreachable: 'danger',
+  error: 'danger'
+};
+
+function EngineCard({ title, subtitle, st, rows }) {
+  return (
+    <div className="engine-card">
+      <div className="engine-card-head">
+        <div>
+          <div className="engine-card-title">{title}</div>
+          <div className="engine-card-sub mono">{subtitle}</div>
+        </div>
+        <span className={`status-chip tone-${TONES[st.state] || 'neutral'}`}>
+          <span className="status-dot" />
+          {st.label}
+        </span>
+      </div>
+      <p className="engine-card-message">{st.message}</p>
+      {rows.map(([k, v]) => (
+        <div className="metric-row" key={k}><span>{k}</span><strong>{v}</strong></div>
+      ))}
+      {st.advice?.length > 0 && (
+        <div className="engine-advice">
+          <div className="engine-advice-title">What to do</div>
+          <ol>{st.advice.map((a, i) => <li key={i}>{a}</li>)}</ol>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Compare({ apiUrl }) {
-  const [config, setConfig] = useState(null);
+  const [conn, setConn] = useState(null);
+  const [checking, setChecking] = useState(false);
   const [datasets, setDatasets] = useState(null);
   const [results, setResults] = useState([]);
   const [progress, setProgress] = useState(null); // { key, done, total }
   const [error, setError] = useState(null);
 
-  const load = useCallback(async () => {
+  const checkConnections = useCallback(async (refresh = false) => {
+    setChecking(true);
     try {
-      const [c, d, r] = await Promise.all([
-        fetch(`${apiUrl}/api/compare/config`).then((x) => x.json()),
-        fetch(`${apiUrl}/api/datasets`).then((x) => x.json()),
-        fetch(`${apiUrl}/api/comparisons`).then((x) => x.json())
-      ]);
-      setConfig(c);
-      setDatasets(d);
-      setResults(r);
+      const res = await fetch(`${apiUrl}/api/compare/status${refresh ? '?refresh=1' : ''}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setConn(await res.json());
     } catch (e) {
-      setError(`Could not load comparison data: ${e.message}`);
+      setError(`Could not check connections: ${e.message}`);
+    } finally {
+      setChecking(false);
     }
   }, [apiUrl]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    checkConnections();
+    Promise.all([
+      fetch(`${apiUrl}/api/datasets`).then((x) => x.json()),
+      fetch(`${apiUrl}/api/comparisons`).then((x) => x.json())
+    ])
+      .then(([d, r]) => { setDatasets(d); setResults(r); })
+      .catch((e) => setError(`Could not load comparison data: ${e.message}`));
+  }, [apiUrl, checkConnections]);
 
   const s = useMemo(() => summarize(results), [results]);
   const lastLlmError = useMemo(() => [...results].reverse().find((r) => !r.llm.ok)?.llm.error, [results]);
   const lastJevError = useMemo(() => [...results].reverse().find((r) => !r.jev.ok)?.jev.error, [results]);
-  const ready = config && config.jev.configured && config.llm.configured;
-  const llmName = config ? PROVIDER_NAMES[config.llm.provider] || config.llm.provider : 'LLM';
+  const llmName = conn ? PROVIDER_NAMES[conn.llm.provider] || conn.llm.provider : 'LLM';
+  const llmReady = conn?.llm.state === 'connected';
+  const jevReady = Boolean(conn?.jev.configured);
+  const ready = llmReady && jevReady;
+  const notReadyReason = !conn
+    ? 'Checking connections…'
+    : !jevReady
+      ? 'Runs start once Jev has a key. See "What to do" under Jev above.'
+      : !llmReady
+        ? `Runs start once ${llmName} shows Connected. See "What to do" under ${llmName} above.`
+        : null;
 
   const run = async (key) => {
     const ds = datasets[key];
@@ -98,6 +162,7 @@ function Compare({ apiUrl }) {
       setProgress({ key, done: i + 1, total: ds.samples.length });
     }
     setProgress(null);
+    checkConnections(true);
   };
 
   const clear = async () => {
@@ -106,76 +171,84 @@ function Compare({ apiUrl }) {
     setResults([]);
   };
 
-  if (!config) {
-    return error ? <div className="banner banner-error"><Icon name="alert" />{error}</div> : <p className="muted">Loading…</p>;
+  if (!conn) {
+    return error ? <div className="banner banner-error"><Icon name="alert" />{error}</div> : <p className="muted">Checking connections…</p>;
   }
 
   return (
     <>
-      <section className="grid-2">
-        <div className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">Setup</div>
-              <div className="panel-sub">Both engines get the same claim, the same six questions and the same allowed answers</div>
-            </div>
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <div className="panel-title">Connections</div>
+            <div className="panel-sub">Both engines get the same claim, the same six questions and the same allowed answers</div>
           </div>
-          <div className="panel-body">
-            <div className="metric-row">
-              <span>Jev</span>
-              <strong>{config.jev.model}{config.jev.configured ? '' : ' · no key'}</strong>
-            </div>
-            <div className="metric-row"><span>Jev list price</span><strong>{priceLabel(config.jev.price)}</strong></div>
-            <div className="metric-row">
-              <span>{llmName}</span>
-              <strong>{config.llm.model}{config.llm.effort ? ` · effort ${config.llm.effort}` : ''}{config.llm.configured ? '' : ' · no key'}</strong>
-            </div>
-            <div className="metric-row"><span>{llmName} list price</span><strong>{priceLabel(config.llm.price)}</strong></div>
-            <p className="hint" style={{ marginTop: 10 }}>
-              The {llmName} reply is a strict JSON object with no explanation text, the smallest output an LLM can give here.
-              Change the provider or model with <code>LLM_PROVIDER</code>, <code>ANTHROPIC_MODEL</code> or <code>OPENAI_MODEL</code> in <code>backend/.env</code>.
-            </p>
+          <button className="btn btn-secondary btn-sm" onClick={() => checkConnections(true)} disabled={checking || !!progress}>
+            {checking ? 'Checking…' : 'Check again'}
+          </button>
+        </div>
+        <div className="engine-grid">
+          <EngineCard
+            title="Jev"
+            subtitle={conn.jev.model}
+            st={conn.jev}
+            rows={[
+              ['Endpoint', conn.jev.endpoint],
+              ['List price', priceLabel(conn.jev.price)]
+            ]}
+          />
+          <EngineCard
+            title={llmName}
+            subtitle={conn.llm.model}
+            st={conn.llm}
+            rows={[
+              ['Provider', `LLM_PROVIDER=${conn.llm.provider}`],
+              ['Effort', conn.llm.effort || 'default'],
+              ['List price', priceLabel(conn.llm.price)]
+            ]}
+          />
+        </div>
+        <p className="hint engine-foot">
+          The {llmName} reply is a strict JSON object with no explanation text, the smallest output an LLM can give here.
+          Change the provider or model with <code>LLM_PROVIDER</code>, <code>ANTHROPIC_MODEL</code> or <code>OPENAI_MODEL</code> in{' '}
+          <code>backend/.env</code>. The app picks up changes when you save; then click <strong>Check again</strong>.
+        </p>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <div className="panel-title">Run a comparison</div>
+            <div className="panel-sub">Each claim is one paid call to Jev and one to {conn.llm.model}</div>
           </div>
         </div>
-
-        <div className="panel">
-          <div className="panel-head">
-            <div>
-              <div className="panel-title">Run a comparison</div>
-              <div className="panel-sub">Each claim is one paid call to Jev and one to {config.llm.model}</div>
+        <div className="panel-body">
+          {notReadyReason && (
+            <div className="banner banner-warning">
+              <Icon name="alert" />
+              <span>{notReadyReason}</span>
             </div>
-          </div>
-          <div className="panel-body">
-            {!ready && (
-              <div className="banner banner-warning">
-                <Icon name="alert" />
-                <span>
-                  Add {[!config.jev.configured && 'JEV_API_KEY', !config.llm.configured && (config.llm.provider === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY')].filter(Boolean).join(' and ')} to{' '}
-                  <code>backend/.env</code> and save. The app picks it up automatically; reload this page.
-                </span>
-              </div>
-            )}
-            {error && <div className="banner banner-error"><Icon name="alert" />{error}</div>}
-            <div className="compare-runs">
-              {datasets && Object.entries(datasets).map(([key, ds]) => (
-                <div className="compare-run" key={key}>
-                  <div>
-                    <div className="dataset-name">{ds.name.replace(/\s*\(.*\)$/, '')}</div>
-                    <div className="dataset-meta">{ds.samples.length} claims</div>
-                  </div>
-                  {progress?.key === key ? (
-                    <div style={{ minWidth: 140 }}>
-                      <div className="progress"><span style={{ width: `${(progress.done / progress.total) * 100}%` }} /></div>
-                      <div className="hint">{progress.done} of {progress.total}</div>
-                    </div>
-                  ) : (
-                    <button className="btn btn-secondary btn-sm" onClick={() => run(key)} disabled={!ready || !!progress}>
-                      Run
-                    </button>
-                  )}
+          )}
+          {error && <div className="banner banner-error"><Icon name="alert" /><span>{error}</span></div>}
+          <div className="compare-runs">
+            {datasets && Object.entries(datasets).map(([key, ds]) => (
+              <div className="compare-run" key={key}>
+                <div>
+                  <div className="dataset-name">{ds.name.replace(/\s*\(.*\)$/, '')}</div>
+                  <div className="dataset-meta">{ds.samples.length} claims</div>
                 </div>
-              ))}
-            </div>
+                {progress?.key === key ? (
+                  <div style={{ minWidth: 160 }}>
+                    <div className="progress"><span style={{ width: `${(progress.done / progress.total) * 100}%` }} /></div>
+                    <div className="hint">{progress.done} of {progress.total}</div>
+                  </div>
+                ) : (
+                  <button className="btn btn-secondary btn-sm" onClick={() => run(key)} disabled={!ready || !!progress}>
+                    Run {ds.samples.length} claims
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -190,31 +263,43 @@ function Compare({ apiUrl }) {
         </div>
       ) : (
         <>
-          {(s.llm.failed > 0 || s.jev.failed > 0) && (
-            <div className="banner banner-error">
-              <Icon name="alert" />
-              <span>
-                {s.llm.failed > 0 && <><strong>{s.llm.failed} of {results.length} {llmName} calls failed.</strong> Latest error: {lastLlmError}<br /></>}
-                {s.jev.failed > 0 && <><strong>{s.jev.failed} of {results.length} Jev calls failed.</strong> Latest error: {lastJevError}<br /></>}
-                {/workspace/i.test(lastLlmError || '') && (
-                  <>To fix: copy your workspace ID (starts with <code>wrkspc_</code>) from the Anthropic Console under Settings → Workspaces,
-                  paste it after <code>ANTHROPIC_WORKSPACE_ID=</code> in <code>backend/.env</code> and save. Or use an API key created inside a workspace.<br /></>
-                )}
-                Use <strong>Clear results</strong> to remove failed runs.
-              </span>
-            </div>
+          {(s.failedLlm > 0 || s.failedJev > 0) && (
+            llmReady && jevReady ? (
+              // Both engines work now, so these failures are history: say so instead of repeating old advice.
+              <div className="banner banner-warning">
+                <Icon name="alert" />
+                <span>
+                  {s.failedLlm + s.failedJev} earlier {s.failedLlm + s.failedJev === 1 ? 'call' : 'calls'} failed
+                  ({[s.failedJev && `${s.failedJev} Jev`, s.failedLlm && `${s.failedLlm} ${llmName}`].filter(Boolean).join(', ')}).
+                  Both engines are connected now, and failed calls are left out of the averages.
+                  Use <strong>Clear results</strong> to remove them.
+                </span>
+              </div>
+            ) : (
+              <div className="banner banner-error">
+                <Icon name="alert" />
+                <span>
+                  {s.failedLlm > 0 && <><strong>{s.failedLlm} {llmName} {s.failedLlm === 1 ? 'call' : 'calls'} failed.</strong> Latest error: {lastLlmError}<br /></>}
+                  {s.failedJev > 0 && <><strong>{s.failedJev} Jev {s.failedJev === 1 ? 'call' : 'calls'} failed.</strong> Latest error: {lastJevError}<br /></>}
+                  See <strong>What to do</strong> under Connections above, then click <strong>Check again</strong>.
+                </span>
+              </div>
+            )
           )}
 
           <section className="panel">
             <div className="panel-head">
               <div>
                 <div className="panel-title">Averages per claim</div>
-                <div className="panel-sub">{s.compared} claims where both engines answered · list prices</div>
+                <div className="panel-sub">
+                  {s.compared} {s.compared === 1 ? 'claim' : 'claims'} where both engines answered
+                  {s.runs > s.compared ? ` (latest result for each, from ${s.runs} runs)` : ''} · list prices
+                </div>
               </div>
               <button className="btn btn-ghost btn-sm" onClick={clear} disabled={!!progress}>Clear results</button>
             </div>
             <div className="table-wrap">
-              <table className="table">
+              <table className="table measure-table">
                 <thead>
                   <tr><th>Measure</th><th className="num">Jev</th><th className="num">{llmName}</th><th className="num">{llmName} ÷ Jev</th></tr>
                 </thead>
@@ -229,11 +314,8 @@ function Compare({ apiUrl }) {
                   <tr><td>Latency</td><td className="num">{s.jev.latency == null ? '—' : `${num(s.jev.latency)} ms`}</td><td className="num">{s.llm.latency == null ? '—' : `${num(s.llm.latency)} ms`}</td><td className="num">{ratio(s.llm.latency, s.jev.latency)}</td></tr>
                   <tr><td>Cost per claim</td><td className="num">{perClaim(s.jev.cost)}</td><td className="num">{perClaim(s.llm.cost)}</td><td className="num">{ratio(s.llm.cost, s.jev.cost)}</td></tr>
                   <tr className="row-strong"><td>Cost per 1 million claims</td><td className="num">{s.jev.perMillion == null ? '—' : money(s.jev.perMillion)}</td><td className="num">{s.llm.perMillion == null ? '—' : money(s.llm.perMillion)}</td><td className="num">{ratio(s.llm.perMillion, s.jev.perMillion)}</td></tr>
-                  {s.jev.tested > 0 && (
-                    <tr><td>Matched expected outcome</td><td className="num">{s.jev.matched} of {s.jev.tested}</td><td className="num">{s.llm.matched} of {s.llm.tested}</td><td /></tr>
-                  )}
-                  {(s.jev.failed > 0 || s.llm.failed > 0) && (
-                    <tr><td>Errors</td><td className="num">{s.jev.failed}</td><td className="num">{s.llm.failed}</td><td /></tr>
+                  {s.tested > 0 && (
+                    <tr><td>Matched expected outcome</td><td className="num">{s.jev.matched} of {s.tested}</td><td className="num">{s.llm.matched} of {s.tested}</td><td className="num">—</td></tr>
                   )}
                 </tbody>
               </table>

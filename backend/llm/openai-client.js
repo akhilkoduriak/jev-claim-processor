@@ -92,4 +92,4 @@ async function assess(claim, { apiKey, model = DEFAULT_MODEL, reasoningEffort, c
   };
 }
 
-module.exports = { assess, DEFAULT_MODEL };
+module.exports = { assess, toLlmError, DEFAULT_MODEL };

@@ -12,6 +12,7 @@ const openai = require('./llm/openai-client');
 const { costFor, priceFor } = require('./llm/pricing');
 const { FIELDS } = require('./llm/prompt');
 const engine = require('./decision-engine');
+const status = require('./llm/status');
 
 const NECESSITY_LEVELS = jevClient.QUESTIONS.medical_necessity.criteria;
 
@@ -77,7 +78,14 @@ function jevAnswers(a) {
 async function runJev(claim, fetchImpl) {
   const c = engine.config();
   const started = process.hrtime.bigint();
-  const a = await jevClient.assess(claim, { ...c, fetchImpl: fetchImpl || fetch });
+  let a;
+  try {
+    a = await jevClient.assess(claim, { ...c, fetchImpl: fetchImpl || fetch });
+  } catch (err) {
+    engine.recordJevCall({ ok: false, error: err });
+    throw err;
+  }
+  engine.recordJevCall({ ok: true, model: a.jev?.model });
   const latencyMs = Number(process.hrtime.bigint() - started) / 1e6;
   const usage = { inputTokens: a.jev?.usage?.input_tokens || 0, outputTokens: a.jev?.usage?.output_tokens || 0 };
   return {
@@ -154,4 +162,14 @@ async function compareClaim(claim, deps = {}) {
   };
 }
 
-module.exports = { compareClaim, getConfig, llmConfig };
+/** Live connection status for both engines (the LLM check is a free model-list call). */
+async function getStatus({ force = false, deps = {} } = {}) {
+  const cfg = getConfig();
+  const llm = await status.checkLlm(llmConfig(), { force, ...deps });
+  return {
+    llm: { ...llm, effort: cfg.llm.effort, price: cfg.llm.price },
+    jev: { ...status.jevStatus(engine.getStatus(), cfg.jev.configured), model: cfg.jev.model, endpoint: cfg.jev.endpoint, price: cfg.jev.price, configured: cfg.jev.configured }
+  };
+}
+
+module.exports = { compareClaim, getConfig, getStatus, llmConfig };

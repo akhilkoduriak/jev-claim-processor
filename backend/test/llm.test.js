@@ -275,3 +275,85 @@ test('config reports provider, model and whether each side has a key', () => {
   assert.strictEqual(o.llm.configured, false);
   process.env.LLM_PROVIDER = 'anthropic';
 });
+
+// ---------- Connection status ----------
+
+const status = require('../llm/status');
+const engineForStatus = require('../decision-engine');
+
+const modelsStub = (ids, calls = { n: 0 }) => ({
+  calls,
+  models: {
+    list: () => {
+      calls.n++;
+      if (ids instanceof Error) throw ids;
+      return (async function* () { for (const id of ids) yield { id }; })();
+    }
+  }
+});
+const cfg = (overrides = {}) => ({ provider: 'anthropic', apiKey: 'sk-ant-test', model: 'claude-opus-5', ...overrides });
+
+test('status: no key means "not configured", with where to get one', async () => {
+  status.clearCache();
+  const r = await status.checkLlm(cfg({ apiKey: '' }));
+  assert.strictEqual(r.state, 'not_configured');
+  assert.ok(r.advice.some((a) => a.includes('ANTHROPIC_API_KEY=')));
+  assert.ok(r.advice.some((a) => a.includes('console.anthropic.com')));
+});
+
+test('status: connected when the key works and the model is listed', async () => {
+  status.clearCache();
+  const r = await status.checkLlm(cfg(), { anthropic: modelsStub(['claude-opus-5', 'claude-sonnet-5']) });
+  assert.strictEqual(r.state, 'connected');
+  assert.deepStrictEqual(r.advice, []);
+});
+
+test('status: model not available suggests models the key can use', async () => {
+  status.clearCache();
+  const r = await status.checkLlm(cfg({ model: 'claude-opus-9' }), { anthropic: modelsStub(['claude-opus-5', 'claude-sonnet-5', 'gpt-x']) });
+  assert.strictEqual(r.state, 'model_unavailable');
+  assert.match(r.advice[0], /ANTHROPIC_MODEL=.*claude-opus-5, claude-sonnet-5/);
+  assert.ok(!r.advice[0].includes('gpt-x'));
+});
+
+test('status: a key without a workspace gets workspace advice; a bad key gets key advice', async () => {
+  status.clearCache();
+  const wsErr = new Anthropic.BadRequestError(400, { type: 'error', error: { type: 'invalid_request_error', message: 'This API key is not scoped to a workspace, so this request must include the anthropic-workspace-id header' } }, 'x', new Headers());
+  const ws = await status.checkLlm(cfg(), { anthropic: modelsStub(wsErr) });
+  assert.strictEqual(ws.state, 'workspace_required');
+  assert.ok(ws.advice.some((a) => a.includes('ANTHROPIC_WORKSPACE_ID=')));
+
+  status.clearCache();
+  const authErr = new Anthropic.AuthenticationError(401, { type: 'error' }, 'invalid x-api-key', new Headers());
+  const auth = await status.checkLlm(cfg(), { anthropic: modelsStub(authErr) });
+  assert.strictEqual(auth.state, 'auth_error');
+});
+
+test('status: results are cached for 30 s unless a refresh is forced', async () => {
+  status.clearCache();
+  const stub = modelsStub(['claude-opus-5']);
+  await status.checkLlm(cfg(), { anthropic: stub });
+  await status.checkLlm(cfg(), { anthropic: stub });
+  assert.strictEqual(stub.calls.n, 1);
+  await status.checkLlm(cfg(), { anthropic: stub, force: true });
+  assert.strictEqual(stub.calls.n, 2);
+});
+
+test('status: OpenAI is checked the same way', async () => {
+  status.clearCache();
+  const r = await status.checkLlm(cfg({ provider: 'openai', apiKey: 'sk-test', model: 'gpt-6-sol' }), { openai: modelsStub(['gpt-6-sol']) });
+  assert.strictEqual(r.state, 'connected');
+});
+
+test('status: comparison calls update Jev\'s status, so a failure shows on the page', async () => {
+  engineForStatus.resetStatus();
+  const rejected = async () => ({ ok: false, status: 401, headers: { get: () => null }, json: async () => ({ detail: { message: 'Cannot authenticate' } }) });
+  await comparison.compareClaim(claim, { jevFetch: rejected, anthropic: claudeStub(claudeResponse(goodAnswers)) });
+  const j = status.jevStatus(engineForStatus.getStatus(), true);
+  assert.strictEqual(j.state, 'error');
+  assert.match(j.message, /rejected the API key/);
+  assert.ok(j.advice.length > 0);
+
+  await comparison.compareClaim(claim, { jevFetch, anthropic: claudeStub(claudeResponse(goodAnswers)) });
+  assert.strictEqual(status.jevStatus(engineForStatus.getStatus(), true).state, 'connected');
+});

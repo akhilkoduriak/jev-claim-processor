@@ -120,4 +120,4 @@ async function assess(claim, options = {}) {
   };
 }
 
-module.exports = { assess, LlmError, DEFAULT_MODEL, FALLBACK_BETA };
+module.exports = { assess, toLlmError, LlmError, DEFAULT_MODEL, FALLBACK_BETA };
