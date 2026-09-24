@@ -338,9 +338,9 @@ function Compare({ apiUrl }) {
                 <thead>
                   <tr>
                     <th>Claim</th><th>Jev</th><th>{llmName}</th><th>Agree</th>
-                    <th className="num">Jev tokens</th><th className="num">{llmName} in / out</th>
-                    <th className="num">Jev ms</th><th className="num">{llmName} ms</th>
-                    <th className="num">Jev cost</th><th className="num">{llmName} cost</th>
+                    <th className="num">Jev tokens</th><th className="num">{llmName} tokens<div className="th-sub">in / out</div></th>
+                    <th className="num">Latency ms<div className="th-sub">Jev / {llmName}</div></th>
+                    <th className="num">Cost<div className="th-sub">Jev / {llmName}</div></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -362,10 +362,8 @@ function Compare({ apiUrl }) {
                       </td>
                       <td className="num">{r.jev.ok ? num(r.jev.usage.inputTokens) : '—'}</td>
                       <td className="num">{r.llm.ok ? `${num(r.llm.usage.inputTokens)} / ${num(r.llm.usage.outputTokens)}` : '—'}</td>
-                      <td className="num">{r.jev.ok ? num(r.jev.latencyMs) : '—'}</td>
-                      <td className="num">{r.llm.ok ? num(r.llm.latencyMs) : '—'}</td>
-                      <td className="num">{r.jev.ok ? perClaim(r.jev.costUsd) : '—'}</td>
-                      <td className="num">{r.llm.ok ? perClaim(r.llm.costUsd) : '—'}</td>
+                      <td className="num">{r.jev.ok ? num(r.jev.latencyMs) : '—'} / {r.llm.ok ? num(r.llm.latencyMs) : '—'}</td>
+                      <td className="num">{r.jev.ok ? perClaim(r.jev.costUsd) : '—'} / {r.llm.ok ? perClaim(r.llm.costUsd) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

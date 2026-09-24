@@ -225,11 +225,11 @@ button { font: inherit; }
   text-align: left; white-space: nowrap;
   font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--text-3); background: var(--surface-2);
-  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
 }
-.table td { padding: 11px 16px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; white-space: nowrap; }
+.table td { padding: 11px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; white-space: nowrap; }
 .table tbody tr:last-child td { border-bottom: 0; }
-.table td.truncate { max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.table td.truncate { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
 .table tr.clickable { cursor: pointer; }
 .table tr.clickable:hover td, .table tr.is-open td { background: var(--surface-2); }
 .chev { display: inline-grid; color: var(--text-3); transition: transform 0.15s; }
@@ -259,7 +259,7 @@ button { font: inherit; }
 .engine-rules { color: var(--text-3); }
 
 .conf { display: inline-flex; align-items: center; gap: 8px; }
-.conf-track { width: 60px; height: 6px; border-radius: 3px; background: var(--border-soft); overflow: hidden; }
+.conf-track { width: 48px; height: 6px; border-radius: 3px; background: var(--border-soft); overflow: hidden; }
 .conf-fill { display: block; height: 100%; background: var(--primary); }
 .conf-val { font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; width: 32px; }
 
@@ -371,6 +371,7 @@ input[readonly] { background: var(--surface-2); color: var(--text-2); }
 .compare-run:last-child { border-bottom: 0; }
 .compare-agree { display: flex; gap: 28px; flex-wrap: wrap; font-size: 13.5px; color: var(--text-2); border-top: 1px solid var(--border); }
 .compare-agree strong { color: var(--text); }
+.th-sub { font-size: 10.5px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-3); margin-top: 1px; }
 .row-strong td { font-weight: 600; background: var(--surface-2); }
 .small { font-size: 12px; }
 .truncate-block { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }

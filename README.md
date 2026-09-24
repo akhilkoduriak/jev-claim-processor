@@ -36,6 +36,10 @@ The side bar has three pages. Each has its own URL, so links and the browser's b
 - **Claims** (`#/claims`): search, filter by outcome, and expand a row to see the assessment, engine, policy rules and reasons. After loading test data, an **Unexpected** filter appears if any claim got an outcome other than the expected one.
 - **Jev vs LLM** (`#/compare`): run the test datasets through Jev and an LLM side by side. See [Jev vs LLM comparison](#jev-vs-llm-comparison).
 
+![The Claims page with one claim expanded](docs/app-claims.png)
+
+*The Claims page. An expanded claim shows the assessment, Jev's probability for each outcome, the policy rule that sent it to review, and the reasons.*
+
 The chip in the top bar shows the engine's state: **Jev connected**, **Jev ready**, **Jev unavailable**, **Jev not configured**, or **Jev off**. Hover over it for details.
 
 ## How decisions are made
@@ -127,6 +131,8 @@ The expected outcomes are what the fallback rules produce, and the automated tes
 ## Jev vs LLM comparison
 
 The **Jev vs LLM** page, and `compare-llm.js` in a terminal, send each test claim to Jev and to an LLM at the same time, then compare tokens, latency, cost and answers.
+
+![The Jev vs LLM page](docs/app-compare.png)
 
 - **Same task for both.** The LLM gets the same claim fields, the same six questions, and the same allowed answers with their descriptions. It must reply with a strict JSON object and no explanation text, the smallest output an LLM can give, so the comparison is as favourable to the LLM as it can be.
 - **Providers.** Claude through the Anthropic SDK (structured outputs, effort `low`, refusal fallbacks on), or OpenAI through the Responses API (strict JSON schema). Choose with `LLM_PROVIDER`.
@@ -234,7 +240,7 @@ Jev/
 │       ├── App.js           # Layout, navigation, engine status, notices
 │       ├── index.css        # All styles and colour tokens
 │       └── components/      # Overview, New claim, Claims, Jev vs LLM, badges, icons, formatting
-├── docs/                    # Diagrams (HTML source + PNG) and a screenshot
+├── docs/                    # Diagrams (HTML source + PNG) and app screenshots
 ├── data/                    # claims, decisions and comparisons (created at runtime, not committed)
 ├── sample-claims.json       # Test datasets with expected outcomes
 ├── load-samples.js          # Load a dataset from the terminal
